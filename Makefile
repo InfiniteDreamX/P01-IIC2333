@@ -46,7 +46,7 @@ LIB=$(GTK) $(MTH) $(THR)
 ###############################################################################
 
 # Directorios con elementos de uso común
-COMMON=
+COMMON=cr_api
 
 # Directorios que serán compilados a un programa
 PROGRAMS=crfs
