@@ -1,3 +1,4 @@
 /crfs
+/src/crfs/*
 obj
 /*.bin
