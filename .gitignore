@@ -1,4 +1,10 @@
-/crfs
-/src/crfs/*
+# No guardar ejecutable
+crfs
+
+# No guardar main.c
+src/crfs/*
 obj
-/*.bin
+*.bin
+
+# No guardar carpetas temporales
+.vscode
