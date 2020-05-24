@@ -11,5 +11,6 @@ int main(int argc, char *argv[])
     }
     cr_mount(argv[1]);
     printf("%s\n", disk_name);
+    cr_ls(1);
     // Comenzar aqui
 }
