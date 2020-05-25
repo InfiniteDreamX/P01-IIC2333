@@ -13,7 +13,7 @@ void cr_ls(unsigned disk)
     if(disk < 1 || disk > 4){
         exit_with_error("El numero de particion %d, no es valido.\n", disk);
     }
-    printf("cr_ls-----------------------\n"); 
+    printf("cr_ls(%d)--------------------\n", disk); 
     uint8_t buff[32];
     int entry_size = 32;
     for(int i = 0; i < 256; i++)
@@ -36,4 +36,9 @@ void cr_ls(unsigned disk)
         }
     }
     printf("----------------------------\n"); 
+}
+
+crFILE* cr_open(unsigned disk, char* filename, char mode)
+{
+
 }
