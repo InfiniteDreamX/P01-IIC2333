@@ -11,6 +11,7 @@ int main(int argc, char *argv[])
         return 1;
     }
     cr_mount(argv[1]);
+
     printf("Utilizando el disco %s\n", disk_name);
     while (1)
     {
@@ -33,4 +34,5 @@ int main(int argc, char *argv[])
             exit(0);
         }
     }
+
 }
