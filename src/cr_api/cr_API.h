@@ -12,3 +12,4 @@ struct cr_file
 };
 char* disk_name;
 void cr_mount(char* diskname);
+int cr_exists(unsigned disk, char* filename);
