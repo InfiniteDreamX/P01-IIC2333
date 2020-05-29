@@ -1,7 +1,9 @@
 #include "cr_API.h"
 #include "../utils/disk_utils.h"
+#include "../utils/byte_utils.h"
 #include "../utils/common_utils.h"
 #include <stdio.h>
+#include <string.h>
 
 void cr_mount(char* diskname)
 {
@@ -13,7 +15,7 @@ void cr_ls(unsigned disk)
     if(disk < 1 || disk > 4){
         exit_with_error("El numero de particion %d, no es valido.\n", disk);
     }
-    printf("cr_ls(%d)--------------------\n"); 
+    printf("cr_ls(%d)--------------------\n", disk); 
     uint8_t buff[32];
     int entry_size = 32;
     for(int i = 0; i < 256; i++)
@@ -107,8 +109,15 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
             }
             data_blocks[i] = (address_buffer[0] << 24) | (address_buffer[1] << 16) | (address_buffer[2] << 8) | (address_buffer[3]);
         }
-
-        
+        crFILE *crfile = malloc(sizeof(crFILE) + sizeof(unsigned int) * block_number);
+        crfile->partition = disk;
+        crfile->block = 0;
+        crfile->byte = 0;
+        crfile->mode = mode;
+        crfile->references = references;
+        crfile->size = size;
+        memcpy(crfile->data_blocks, data_blocks, sizeof(unsigned int) * block_number);
+        return crfile;
     }
     else if (mode == "w" && !cr_exists(disk, filename)){
         
