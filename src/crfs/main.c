@@ -30,11 +30,11 @@ int main(int argc, char *argv[])
         }
         if (strcmp(command, "cr_open") == 0)
         {
-            cr_open(1, "text.txt", 'r');
+            cr_open(1, "Baroque.mp3", 'r');
         }
         if (strcmp(command, "cr_ls") == 0)
         {
-            cr_ls(4);
+            cr_ls(1);
         }
         if (strcmp(command, "exit") == 0)
         {

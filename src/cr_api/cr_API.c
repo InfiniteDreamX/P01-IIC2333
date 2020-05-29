@@ -45,10 +45,30 @@ void cr_ls(unsigned disk)
 crFILE* cr_open(unsigned disk, char* filename, char mode)
 {
     printf("EN FUNCION\n");
-
+    printf("disk: %d\n", disk);
+    printf("filename: %s\n", filename);
     printf("mode: %c\n", mode);
+    printf("mode check: %d\n", mode == 'r');
+    printf("exists check: %d\n", cr_exists(disk, filename));
     if (mode == 'r' && cr_exists(disk, filename)){
         printf("EN CAMINO\n");
+        char link1[] = "1/";
+        char link2[] = "2/";
+        char link3[] = "3/";
+        char link4[] = "4/";
+        if (!(memcmp(filename, link1, 2) && memcmp(filename, link2, 2) && memcmp(filename, link3, 2) && memcmp(filename, link4, 2))) {
+            char linked_name[strlen(filename) - 2];
+            memcpy(linked_name, filename + 2, strlen(filename) - 2);
+            linked_name[strlen(filename) - 2] = '\0';
+            printf("memcmp: %d\n", memcmp(linked_name, "Baroque.mp3", strlen(linked_name)));
+            printf("pre-exists check (in 1): %d\n", cr_exists(1, "Baroque.mp3"));
+            printf("linked_name: %s\n", linked_name);
+            unsigned int linked_disk = filename[0] - '0';
+            printf("%d\n", linked_disk);
+            crFILE *crfile = cr_open(linked_disk, linked_name, 'r');
+            return crfile;
+        }
+
         uint8_t index_block_position_buffer[3];
         unsigned int index_block_position;
 
@@ -143,9 +163,6 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
         crfile->references = references;
         crfile->size = size;
         memcpy(crfile->data_blocks, data_blocks, sizeof(unsigned int) * block_number);
-        for (int j = 0; j < block_number; j++) {
-            printf("ubicacion bloque: %u\n", data_blocks[j]);
-        }
         printf("%c\n", crfile->mode);
         printf("compare mode: %d\n", crfile->mode == 'r');
         printf("%u\n", crfile->partition);
