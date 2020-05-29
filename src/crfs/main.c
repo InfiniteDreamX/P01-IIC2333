@@ -28,6 +28,14 @@ int main(int argc, char *argv[])
             scanf("%s", filename);
             printf("%i\n", cr_exists(disk, filename));
         }
+        if (strcmp(command, "cr_open") == 0)
+        {
+            cr_open(1, "Baroque.mp3", 'r');
+        }
+        if (strcmp(command, "cr_ls") == 0)
+        {
+            cr_ls(1);
+        }
         if (strcmp(command, "exit") == 0)
         {
             printf("Adios!\n");
