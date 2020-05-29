@@ -44,11 +44,11 @@ void cr_ls(unsigned disk)
 
 crFILE* cr_open(unsigned disk, char* filename, char mode)
 {
-    if (mode == "r" && cr_exists(disk, filename)){
+    if (!(strcmp(&mode, "r") == 0) && cr_exists(disk, filename)){
         uint8_t index_block_position_buffer[3];
         unsigned int index_block_position;
 
-        // falta obtener posicion del index block
+        
         int current_byte = 0;
         int filename_len = strlen(filename);
         uint8_t info_buffer[1];
@@ -86,17 +86,30 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
         read_block_partition_index(disk, 0, index_block_position_buffer, found_entry_byte, 3);
         index_block_position_buffer[0] = set_bit_to_byte(index_block_position_buffer[0], 7, 0);
         index_block_position = (index_block_position_buffer[0] << 16) | (index_block_position_buffer[1] << 8) | (index_block_position_buffer[2]);
-
         uint8_t references_buff[4];
         uint8_t size_buff[8];
         read_block_index(index_block_position, references_buff, 0, 4);
         read_block_index(index_block_position, size_buff, 4, 8);
         unsigned int references = (references_buff[0] << 24) | (references_buff[1] << 16) | (references_buff[2] << 8) | (references_buff[3]); 
-        unsigned long size = (size_buff[0] << 56) | (size_buff[1] << 48) | (size_buff[2] << 40) | (size_buff[3] << 32) | (size_buff[4] << 24) | (size_buff[5] << 16) | (size_buff[6] << 8) | (size_buff[7]);
-    
+        
+        unsigned long size = 0;
+        size |= size_buff[0];
+        size = size << 8;
+        size |= size_buff[1];
+        size = size << 8;
+        size |= size_buff[2];
+        size = size << 8;
+        size |= size_buff[3];
+        size = size << 8;
+        size |= size_buff[4];
+        size = size << 8;
+        size |= size_buff[5];
+        size = size << 8;
+        size |= size_buff[6];
+        size = size << 8;
+        size |= size_buff[7];
+        
         // A continuacion obtener direcciones para bloques de datos
-        // a checked se le va sumando la capacidad ya contenida en los bloques incluidos en el array
-        unsigned long checked = 0;
         int block_number = size/BLOCK_SIZE + (size % BLOCK_SIZE != 0);
         unsigned int data_blocks[size/BLOCK_SIZE + (size % BLOCK_SIZE != 0)];
         uint8_t indirect_block_buffer[4];
@@ -121,7 +134,7 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
         memcpy(crfile->data_blocks, data_blocks, sizeof(unsigned int) * block_number);
         return crfile;
     }
-    else if (mode == "w" && !cr_exists(disk, filename)){
+    else if (!(strcmp(&mode, "w") == 0) && !cr_exists(disk, filename)){
         
     }
     else{

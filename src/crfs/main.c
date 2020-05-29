@@ -28,6 +28,10 @@ int main(int argc, char *argv[])
             scanf("%s", filename);
             printf("%i\n", cr_exists(disk, filename));
         }
+        if (strcmp(command, "cr_open") == 0)
+        {
+            cr_open(1, "text.txt", "r");
+        }
         if (strcmp(command, "exit") == 0)
         {
             printf("Adios!\n");
