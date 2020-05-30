@@ -189,8 +189,7 @@ crFILE *cr_open(unsigned disk, char *filename, char mode)
     }
     else
     {
-        printf("ERROR");
-        exit_with_error("No se pudo abrir el archivo %s en modo %s.\n", filename, mode);
+        exit_with_error("No se pudo abrir el archivo %s.\n", filename);
     }
 }
 
@@ -266,7 +265,7 @@ int cr_read(crFILE *file_desc, void *buffer, int nbytes)
         {
             read_qty = to_read - bytes_read;
             next_block = 0;
-            next_byte = file_desc -> byte + to_read - bytes_read;
+            next_byte = file_desc->byte + to_read - bytes_read;
         }
         uint8_t block_buffer[read_qty];
         read_block_index(file_desc->data_blocks[file_desc->block], block_buffer, file_desc->byte, read_qty);
@@ -274,7 +273,6 @@ int cr_read(crFILE *file_desc, void *buffer, int nbytes)
         bytes_read += read_qty;
         file_desc->block += next_block;
         file_desc->byte = next_byte;
-        
     }
     if (end_file)
     {
@@ -282,4 +280,88 @@ int cr_read(crFILE *file_desc, void *buffer, int nbytes)
         file_desc->byte = 0;
     }
     return bytes_read;
+}
+
+// Funcion privada para guardar toda una particion
+void unload_disk(unsigned disk, char *dest)
+{
+    uint8_t buff[32];
+    int entry_size = 32;
+    for (int i = 0; i < 256; i++)
+    {
+        char name[32];
+        read_block_partition_index(disk, 0, buff, entry_size * i, 32); // read_block_index_partition
+        uint8_t first_byte = buff[0];
+        uint8_t valid_bit = first_byte >> 7;
+        if (valid_bit)
+        {
+            // recorrer desde byte 3 obteniendo el nombre -- acaba con cero
+            read_block_partition_index(disk, 0, buff, entry_size * i + 3, 29);
+            sprintf(name, "%s", buff);
+            char new_name[32];
+            if (name[1] == '/')
+            {   
+                memmove(new_name, name + 2, sizeof(name) - 2);
+            }
+            char new_dest[100];
+            strcpy(new_dest, dest);
+            strcat(new_dest, "/");
+            if (name[1] == '/')
+            {
+                strcat(new_dest, new_name);
+            }
+            else
+            {
+                strcat(new_dest, name);
+            }
+            cr_unload(disk, name, new_dest);
+        }
+    }
+}
+
+int cr_unload(unsigned disk, char *orig, char *dest)
+{
+    if (orig == NULL)
+    {
+        if (disk == 0)
+        {
+            for (int i = 1; i < 5; i++)
+            {
+                unload_disk(i, dest);
+            }
+        }
+        else
+        {
+            unload_disk(disk, dest);
+        }
+    }
+    else
+    {
+        if (disk > 4 || disk < 1)
+        {
+            exit_with_error("Numero de particion incorrecto: %i\n", disk);
+        }
+        else
+        {
+            if (!cr_exists(disk, orig))
+            {
+                exit_with_error("El archivo %s no existe en la particion %i\n", orig, disk);
+            }
+            else
+            {
+                crFILE *file = cr_open(disk, orig, 'r');
+                uint8_t *buffer = calloc(file->size, sizeof(uint8_t));
+                cr_read(file, buffer, file->size);
+                FILE *dest_file;
+                if ((dest_file = fopen(dest, "wb")) == NULL)
+                {
+                    exit_with_error("Error abriendo el archivo de destino: %s\n", dest);
+                }
+                fwrite(buffer, sizeof(uint8_t), file->size, dest_file);
+                fclose(dest_file);
+                free(buffer);
+                return 0;
+            }
+        }
+    }
 }
