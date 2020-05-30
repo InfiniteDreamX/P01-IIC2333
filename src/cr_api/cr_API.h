@@ -15,6 +15,7 @@ struct cr_file
    unsigned int partition; // particion donde se encuentra el archivo
    unsigned int block; // bloque de datos actual
    unsigned int byte;  // indice dentro del bloque de datos actual
+   int block_number;
    char mode; // r o w
    unsigned int references; // 4 bytes para cantidad de hardlinks
    unsigned long size; // 8 bytes para tamaño de archivo
@@ -26,4 +27,8 @@ void cr_mount(char* diskname);
 void cr_ls(unsigned disk);
 
 int cr_exists(unsigned disk, char* filename);
+
+crFILE* cr_open(unsigned disk, char* filename, char mode);
+
+int cr_read(crFILE* file_desc, void* buffer, int nbytes);
 
