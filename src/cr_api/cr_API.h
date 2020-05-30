@@ -32,3 +32,9 @@ crFILE* cr_open(unsigned disk, char* filename, char mode);
 
 int cr_read(crFILE* file_desc, void* buffer, int nbytes);
 
+/* El funcionamiento de esta funcion sera el siguiente:
+   - Si recibe un orig, entonces copia ese archivo a la ruta de desc. En ese caso, desc DEBE SER UN ARCHIVO y no un directorio
+   - Si recibe NULL, copia toda la particion (o el disco entero) en la CARPETA dest. Lo que hace es copiar archivo por archivo y los deja todos dentro de ese directorio
+   Finalmente retorna 0 si hubo exito */
+int cr_unload(unsigned disk, char* orig, char* dest);
+
