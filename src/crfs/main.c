@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include "../cr_api/cr_API.h"
+#include "../utils/byte_utils.h"
 
 int main(int argc, char *argv[])
 {
@@ -30,7 +32,18 @@ int main(int argc, char *argv[])
         }
         if (strcmp(command, "cr_open") == 0)
         {
-            cr_open(1, "Baroque.mp3", 'r');
+            crFILE* guides = cr_open(1, "guides.txt", 'r');
+            uint8_t bytes[100];
+            uint8_t bytes2[100];
+            int bytes_read = cr_read(guides, bytes, 100);
+            printf("Se leyeron %i bytes\n", bytes_read);
+            print_bytes_ascii(bytes, 100);
+            int bytes2_read = cr_read(guides, bytes2, 100);
+            printf("Se leyeron %i bytes\n", bytes2_read);
+            print_bytes_ascii(bytes2, 100);
+
+
+
         }
         if (strcmp(command, "cr_ls") == 0)
         {

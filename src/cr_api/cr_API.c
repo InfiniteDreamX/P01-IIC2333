@@ -5,22 +5,21 @@
 #include "../utils/byte_utils.h"
 #include "../utils/common_utils.h"
 
-
-void cr_mount(char* diskname)
+void cr_mount(char *diskname)
 {
     disk_name = diskname;
 }
 
-
 void cr_ls(unsigned disk)
 {
-    if(disk < 1 || disk > 4){
+    if (disk < 1 || disk > 4)
+    {
         exit_with_error("El numero de particion %d, no es valido.\n", disk);
     }
-    printf("cr_ls(%d)--------------------\n", disk); 
+    printf("cr_ls(%d)--------------------\n", disk);
     uint8_t buff[32];
     int entry_size = 32;
-    for(int i = 0; i < 256; i++)
+    for (int i = 0; i < 256; i++)
     {
         read_block_partition_index(disk, 0, buff, entry_size * i, 32); // read_block_index_partition
         uint8_t first_byte = buff[0];
@@ -39,10 +38,10 @@ void cr_ls(unsigned disk)
             printf("\n");
         }
     }
-    printf("----------------------------\n"); 
+    printf("----------------------------\n");
 }
 
-crFILE* cr_open(unsigned disk, char* filename, char mode)
+crFILE *cr_open(unsigned disk, char *filename, char mode)
 {
     printf("EN FUNCION\n");
     printf("disk: %d\n", disk);
@@ -50,13 +49,15 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
     printf("mode: %c\n", mode);
     printf("mode check: %d\n", mode == 'r');
     printf("exists check: %d\n", cr_exists(disk, filename));
-    if (mode == 'r' && cr_exists(disk, filename)){
+    if (mode == 'r' && cr_exists(disk, filename))
+    {
         printf("EN CAMINO\n");
         char link1[] = "1/";
         char link2[] = "2/";
         char link3[] = "3/";
         char link4[] = "4/";
-        if (!(memcmp(filename, link1, 2) && memcmp(filename, link2, 2) && memcmp(filename, link3, 2) && memcmp(filename, link4, 2))) {
+        if (!(memcmp(filename, link1, 2) && memcmp(filename, link2, 2) && memcmp(filename, link3, 2) && memcmp(filename, link4, 2)))
+        {
             char linked_name[strlen(filename) - 2];
             memcpy(linked_name, filename + 2, strlen(filename) - 2);
             linked_name[strlen(filename) - 2] = '\0';
@@ -86,25 +87,32 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
             if (get_bit_from_byte(info_buffer[0], 7))
             {
                 // uint8_t name_buffer[29];
-                read_block_partition_index(disk, 0, name_buffer, current_byte+3, 29);
+                read_block_partition_index(disk, 0, name_buffer, current_byte + 3, 29);
                 if (memcmp(filename, name_buffer, filename_len) == 0)
                 {
-                    if (filename_len < 29) {
-                        if (name_buffer[filename_len] == 0) {
+                    if (filename_len < 29)
+                    {
+                        if (name_buffer[filename_len] == 0)
+                        {
                             // return 1;
                             was_located = 1;
                         }
-                    } else {
+                    }
+                    else
+                    {
                         // return 1;
                         was_located = 1;
                     }
                 }
             }
-            if (was_located) {
+            if (was_located)
+            {
                 printf("LOCATED\n");
                 found_entry_byte = current_byte;
                 current_byte = BLOCK_SIZE; // para terminar el while, y mantener el valor de la variable (en found_entry_byte)
-            } else {
+            }
+            else
+            {
                 current_byte += 32;
             }
         }
@@ -116,10 +124,10 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
         uint8_t size_buff[8];
         read_block_index(index_block_position, references_buff, 0, 4);
         read_block_index(index_block_position, size_buff, 4, 8);
-        unsigned int references = (references_buff[0] << 24) | (references_buff[1] << 16) | (references_buff[2] << 8) | (references_buff[3]); 
+        unsigned int references = (references_buff[0] << 24) | (references_buff[1] << 16) | (references_buff[2] << 8) | (references_buff[3]);
         printf("references: %u\n", references);
         // unsigned long size = (size_buff[0] << 56) | (size_buff[1] << 48) | (size_buff[2] << 40) | (size_buff[3] << 32) | (size_buff[4] << 24) | (size_buff[5] << 16) | (size_buff[6] << 8) | (size_buff[7]);
-        
+
         unsigned long size = 0;
         size |= size_buff[0];
         size = size << 8;
@@ -136,21 +144,25 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
         size |= size_buff[6];
         size = size << 8;
         size |= size_buff[7];
-        
+
         printf("size: %lu\n", size);
         // A continuacion obtener direcciones para bloques de datos
-        int block_number = size/BLOCK_SIZE + (size % BLOCK_SIZE != 0);
+        int block_number = size / BLOCK_SIZE + (size % BLOCK_SIZE != 0);
         printf("block_number: %u\n", block_number);
-        unsigned int data_blocks[size/BLOCK_SIZE + (size % BLOCK_SIZE != 0)];
+        unsigned int data_blocks[size / BLOCK_SIZE + (size % BLOCK_SIZE != 0)];
         uint8_t indirect_block_buffer[4];
         read_block_index(index_block_position, indirect_block_buffer, BLOCK_SIZE - 4, 4);
         unsigned int indirect_block = (indirect_block_buffer[0] << 24) | (indirect_block_buffer[1] << 16) | (indirect_block_buffer[2] << 8) | (indirect_block_buffer[3]);
         printf("indirect_block: %u\n", indirect_block);
-        for (int i = 0; i < block_number; i++) {
+        for (int i = 0; i < block_number; i++)
+        {
             uint8_t address_buffer[4];
-            if (i < 2044) {
+            if (i < 2044)
+            {
                 read_block_index(index_block_position, address_buffer, 12 + 4 * i, 4);
-            } else {
+            }
+            else
+            {
                 read_block_index(indirect_block, address_buffer, (i - 2044) * 4, 4);
             }
             data_blocks[i] = (address_buffer[0] << 24) | (address_buffer[1] << 16) | (address_buffer[2] << 8) | (address_buffer[3]);
@@ -158,6 +170,7 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
         crFILE *crfile = malloc(sizeof(crFILE) + sizeof(unsigned int) * block_number);
         crfile->partition = disk;
         crfile->block = 0;
+        crfile->block_number = block_number;
         crfile->byte = 0;
         crfile->mode = mode;
         crfile->references = references;
@@ -171,45 +184,102 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
         printf("%u\n", crfile->data_blocks[0]);
         return crfile;
     }
-    else if (mode == 'w' && !cr_exists(disk, filename)){
-        
+    else if (mode == 'w' && !cr_exists(disk, filename))
+    {
     }
-    else{
+    else
+    {
         printf("ERROR");
         exit_with_error("No se pudo abrir el archivo %s en modo %s.\n", filename, mode);
     }
-} 
+}
 
-
-int cr_exists(unsigned disk, char* filename)
+int cr_exists(unsigned disk, char *filename)
 {
-  int current_byte = 0;
-  int filename_len = strlen(filename);
-  if (filename_len > 29)
-  {
-      exit_with_error("Nombre de archivo muy largo: %i caracteres. (Maximo 29)", filename_len);
-  }
-  uint8_t int_filename[filename_len];
-  while (current_byte < BLOCK_SIZE)
-  {
-      uint8_t info_buffer[1];
-      read_block_partition_index(disk, 0, info_buffer, current_byte, 1);
-      if (get_bit_from_byte(info_buffer[0], 7))
-      {
-          uint8_t name_buffer[29];
-          read_block_partition_index(disk, 0, name_buffer, current_byte+3, 29);
-          if (memcmp(filename, name_buffer, filename_len) == 0)
-          {
-              if (filename_len < 29) {
-                if (name_buffer[filename_len] == 0) {
+    int current_byte = 0;
+    int filename_len = strlen(filename);
+    if (filename_len > 29)
+    {
+        exit_with_error("Nombre de archivo muy largo: %i caracteres. (Maximo 29)", filename_len);
+    }
+    uint8_t int_filename[filename_len];
+    while (current_byte < BLOCK_SIZE)
+    {
+        uint8_t info_buffer[1];
+        read_block_partition_index(disk, 0, info_buffer, current_byte, 1);
+        if (get_bit_from_byte(info_buffer[0], 7))
+        {
+            uint8_t name_buffer[29];
+            read_block_partition_index(disk, 0, name_buffer, current_byte + 3, 29);
+            if (memcmp(filename, name_buffer, filename_len) == 0)
+            {
+                if (filename_len < 29)
+                {
+                    if (name_buffer[filename_len] == 0)
+                    {
+                        return 1;
+                    }
+                }
+                else
+                {
                     return 1;
                 }
-              } else {
-                  return 1;
-              }
-          }
-      }
-      current_byte += 32;
-  }
-  return 0;
+            }
+        }
+        current_byte += 32;
+    }
+    return 0;
+}
+
+int cr_read(crFILE *file_desc, void *buffer, int nbytes)
+{
+    if (file_desc->mode != 'r')
+    {
+        printf("El modo del archivo no es 'r'\n");
+        return 0;
+    }
+    int current_byte = file_desc->byte + file_desc->block * BLOCK_SIZE;
+    int to_read;
+    int end_file = 0;
+    if (nbytes > file_desc->size - current_byte)
+    {
+        to_read = file_desc->size - current_byte;
+        end_file = 1;
+    }
+    else
+    {
+        to_read = nbytes;
+    }
+    int bytes_read = 0;
+    while (bytes_read != to_read)
+    {
+        int read_qty;
+        int next_block;
+        int next_byte;
+        if (bytes_read + BLOCK_SIZE - file_desc->byte <= to_read)
+        {
+            read_qty = BLOCK_SIZE - file_desc->byte;
+            next_block = 1;
+            next_byte = 0;
+        }
+        else
+        {
+            read_qty = to_read - bytes_read;
+            next_block = 0;
+            next_byte = file_desc -> byte + to_read - bytes_read;
+        }
+        uint8_t block_buffer[read_qty];
+        read_block_index(file_desc->data_blocks[file_desc->block], block_buffer, file_desc->byte, read_qty);
+        memcpy(buffer + bytes_read, block_buffer, read_qty);
+        bytes_read += read_qty;
+        file_desc->block += next_block;
+        file_desc->byte = next_byte;
+        
+    }
+    if (end_file)
+    {
+        file_desc->block = 0;
+        file_desc->byte = 0;
+    }
+    return bytes_read;
 }
