@@ -17,8 +17,8 @@ unsigned int read_block_index(unsigned int block_number, uint8_t* buffer,
   }
 
   if (start_index + n_bytes > BLOCK_SIZE) {
-    unsigned int start = start;
-    unsigned int end = start_index + n_bytes;
+    unsigned int start = start_index;
+    unsigned int end = start + n_bytes;
     exit_with_error("Bytes del bloque fuera del rango: [%d, %d]", start, end);
   }
 

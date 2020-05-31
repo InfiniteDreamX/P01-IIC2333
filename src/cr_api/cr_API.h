@@ -1,5 +1,6 @@
 #pragma once
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct cr_file crFILE;
 struct cr_file
@@ -16,4 +17,6 @@ void cr_mount(char* diskname);
 void cr_ls(unsigned disk);
 
 int cr_exists(unsigned disk, char* filename);
+
+void cr_bitmap(unsigned disk, bool hex);
 
