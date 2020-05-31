@@ -465,5 +465,7 @@ int cr_rm(unsigned disk, char* filename){
             bitmap_byte[0] = set_bit_to_byte(bitmap_byte[0], 7 - n_bit, 0);
             write_block_partition_index(disk, 1, bitmap_byte, n_byte, 1);
         }
+        return 1;
     }
+    return 1;
 }
