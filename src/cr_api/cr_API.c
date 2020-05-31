@@ -172,7 +172,88 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
         return crfile;
     }
     else if (mode == 'w' && !cr_exists(disk, filename)){
-        
+        uint8_t directory_entry[32];
+        int entry_size = 32;
+        for(int i = 0; i < 256; i++)
+        {
+            read_block_partition_index(disk, 0, directory_entry, entry_size * i, 32);
+            uint8_t first_byte = directory_entry[0];
+            uint8_t valid_bit = first_byte >> 7;
+            if (!valid_bit)
+            {
+                unsigned int block_direction = (disk - 1) * BLOCK_SIZE; // 0
+                for (int k = 0; k < BLOCK_SIZE; k++) { 
+                    uint8_t bitmap_byte[1];
+                    read_block_partition_index(disk, 1, bitmap_byte, k, 1);
+                    for (int j = 0; j < 8; j++) {
+                        unsigned int block_used = get_bit_from_byte(bitmap_byte[0], 7 - j);
+                        if (!block_used) {
+                            uint8_t name_buff[29];
+                            memcpy(name_buff, filename, strlen(filename));
+                            name_buff[strlen(filename)] = '\0';
+                            uint8_t valid_index_buffer[3];
+                            memcpy((uint8_t*)valid_index_buffer,(uint8_t*)&block_direction,sizeof(uint8_t)*3);
+                            uint8_t temp = valid_index_buffer[0];
+                            valid_index_buffer[0] = valid_index_buffer[2];
+                            valid_index_buffer[2] = temp;
+                            valid_index_buffer[0] = set_bit_to_byte(valid_index_buffer[0], 7, 1);
+                            write_block_partition_index(disk, 0, valid_index_buffer, entry_size * i, 3); // 3 bytes en entrada directorio
+                            write_block_partition_index(disk, 0, name_buff, entry_size * i + 3, 29); // Nombre en entrada directorio
+                            // obtener y escribir datos en bloque indice
+                            unsigned int data_block_direction = (disk - 1) * BLOCK_SIZE; // 0
+                            for (int d = 0; d < BLOCK_SIZE; d++) {
+                                uint8_t bitmap_byte[1]; // cambiar nombre?
+                                read_block_partition_index(disk, 1, bitmap_byte, d, 1);
+                                for (int n = 0; n < 8; n++) {
+                                    unsigned int data_block_used = get_bit_from_byte(bitmap_byte[0], 7 - n);
+                                    if (!data_block_used) {
+                                        uint8_t valid_index_buffer[4];
+                                        memcpy((uint8_t*)valid_index_buffer,(uint8_t*)&data_block_direction,sizeof(uint8_t)*4);
+                                        for(int x = 0; x<2; x++) {
+                                            uint8_t temp = valid_index_buffer[x];
+                                            valid_index_buffer[x] = valid_index_buffer[4-x-1];
+                                            valid_index_buffer[4-x-1] = temp;        
+                                        }
+                                        // PARTIR LEYENDO DESDE ACÁ, VIENDO COMENTARIOS EN LAS PROXIMAS LINEAS, PENSANDO LOS PUNTEROS Y DEFINIENDO BIEN LAS LINEAS QUE QUEDAN.
+                                        // write_block_index(block_direction, valid_index_buffer, 12, 4); // cachar si estoy usando bien los numeros de bloques / direcciones. Tal vez, dependiendo del bloque, voy a tener que sumarle un (disk - 1) * BLOCK_SIZE
+                                        write_block_index(block_direction, valid_index_buffer, 12, 4); // tal vez block direction tenía que tener (disk - 1) * BLOCK_SIZE, y acá no usar funcion con partition.
+                                        unsigned int references = 1;
+                                        uint8_t references_buffer[4];
+                                        unsigned long size = 0;
+                                        uint8_t size_buffer[8];
+                                        memcpy((uint8_t*)references_buffer,(uint8_t*)&references,sizeof(uint8_t)*4);
+                                        memcpy((uint8_t*)size_buffer,(uint8_t*)&size,sizeof(uint8_t)*8);
+                                        // escribir bien (usar funcion para esto)
+                                        // https://stackoverflow.com/questions/47745149/reverse-an-integer-array-in-c
+                                        for(int x = 0; x<2; x++) {
+                                            uint8_t temp = references_buffer[x];
+                                            references_buffer[x] = references_buffer[4-x-1];
+                                            references_buffer[4-x-1] = temp;        
+                                        }
+                                        for(int x = 0; x<4; x++) {
+                                            uint8_t temp = size_buffer[x];
+                                            size_buffer[x] = size_buffer[8-x-1];
+                                            size_buffer[8-x-1] = temp;        
+                                        }
+                                        write_block_index(block_direction, references_buffer, 0, 4); // referencias
+                                        write_block_index(block_direction, size_buffer, 4, 8); // tamaño
+                                        crFILE *crfile = malloc(sizeof(crFILE) + sizeof(unsigned int) * 1);
+                                        crfile->mode = mode;
+                                        crfile->partition = disk;
+                                        crfile->references = references;
+                                        crfile->size = size;
+                                        crfile->byte = 0;
+                                        crfile->block = data_block_direction; // ES DECIR,  EN MODO 'w', block  REPRESENTA EL PUNTERO AL BLOQUE DE DATOS EN QUE SE ESTA ESCRIBIENDO
+                                    }
+                                    data_block_direction += 1;
+                                }
+                            }
+                        }
+                        block_direction += 1;
+                    }
+                }
+            }
+        }
     }
     else{
         printf("ERROR");
