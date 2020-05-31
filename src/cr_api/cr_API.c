@@ -215,8 +215,7 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
         }
     }
     else{
-        printf("ERROR");
-        exit_with_error("No se pudo abrir el archivo %s en modo %s.\n", filename, mode);
+        exit_with_error("No se pudo abrir el archivo %s.\n", filename);
     }
 } 
 
