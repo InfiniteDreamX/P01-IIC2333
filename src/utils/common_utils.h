@@ -7,4 +7,5 @@
 // Ver ejemplos de uso en base_print de byte_utils.c
 void exit_with_error(char* error_format, ...);
 
-void ReverseArray(int arr[], int size);
+// Invierte orden de elementos de un array
+void ReverseArray(uint8_t arr[], int size);

@@ -70,4 +70,5 @@ unsigned int get_empty_block_direction(unsigned int partition){
       block_direction += 1;
     }
   }
+  exit_with_error("No quedan bloques vacios en particion %u\n", partition);
 }
