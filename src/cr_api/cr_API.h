@@ -19,5 +19,7 @@ void cr_mount(char* diskname);
 
 void cr_ls(unsigned disk);
 
+crFILE* cr_open(unsigned disk, char* filename, char mode);
+
 int cr_exists(unsigned disk, char* filename);
 

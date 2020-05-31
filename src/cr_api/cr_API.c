@@ -72,7 +72,7 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
         uint8_t index_block_position_buffer[3];
         unsigned int index_block_position;
 
-        // falta obtener posicion del index block
+        //  obtener posicion del index block
         int current_byte = 0;
         int filename_len = strlen(filename);
         uint8_t info_buffer[1];
@@ -91,11 +91,9 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
                 {
                     if (filename_len < 29) {
                         if (name_buffer[filename_len] == 0) {
-                            // return 1;
                             was_located = 1;
                         }
                     } else {
-                        // return 1;
                         was_located = 1;
                     }
                 }
@@ -195,7 +193,7 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
                 uint8_t valid_index_buffer[4];
                 memcpy((uint8_t*)valid_index_buffer,(uint8_t*)&data_block_direction,sizeof(uint8_t)*4);
                 ReverseArray(valid_index_buffer, 4);
-                write_block_index(block_direction, valid_index_buffer, 12, 4); // tal vez block direction tenía que tener (disk - 1) * BLOCK_SIZE, y acá no usar funcion con partition.
+                write_block_index(block_direction, valid_index_buffer, 12, 4); // direccion bloque de datos, en bloque indice
                 unsigned int references = 1;
                 uint8_t references_buffer[4];
                 unsigned long size = 0;
@@ -204,8 +202,8 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
                 memcpy((uint8_t*)size_buffer,(uint8_t*)&size,sizeof(uint8_t)*8);
                 ReverseArray(references_buffer, 4);
                 ReverseArray(size_buffer, 8);
-                write_block_index(block_direction, references_buffer, 0, 4); // referencias
-                write_block_index(block_direction, size_buffer, 4, 8); // tamaño
+                write_block_index(block_direction, references_buffer, 0, 4); // referencias, en bloque indice
+                write_block_index(block_direction, size_buffer, 4, 8); // tamaño, en bloque indice
                 crFILE *crfile = malloc(sizeof(crFILE) + sizeof(unsigned int) * 1);
                 crfile->mode = mode;
                 crfile->partition = disk;
