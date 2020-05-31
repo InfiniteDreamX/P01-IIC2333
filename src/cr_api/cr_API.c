@@ -372,7 +372,7 @@ int cr_rm(unsigned disk, char* filename){
     {
         exit_with_error("Nombre de archivo muy largo: %i caracteres. (Maximo 29)", filename_len);
     }
-    if (!cr_exists(filename)) {
+    if (!cr_exists(disk, filename)) {
         exit_with_error("El archivo %s no existe.", filename);
     }
     
@@ -433,9 +433,28 @@ int cr_rm(unsigned disk, char* filename){
     unsigned int references = (references_buff[0] << 24) | (references_buff[1] << 16) | (references_buff[2] << 8) | (references_buff[3]);
     references -= 1;
     memcpy((uint8_t*)references_buff,(uint8_t*)&references,sizeof(uint8_t)*4);
-    ReverseArray(references_buffer, 4);
+    ReverseArray(references_buff, 4);
     write_block_index(index_block_position, references_buff, 0, 4);
     if (references == 0) {
+        uint8_t size_buff[8];
+        read_block_index(index_block_position, size_buff, 4, 8);
+
+        unsigned long size = 0;
+        size |= size_buff[0];
+        size = size << 8;
+        size |= size_buff[1];
+        size = size << 8;
+        size |= size_buff[2];
+        size = size << 8;
+        size |= size_buff[3];
+        size = size << 8;
+        size |= size_buff[4];
+        size = size << 8;
+        size |= size_buff[5];
+        size = size << 8;
+        size |= size_buff[6];
+        size = size << 8;
+        size |= size_buff[7];
         int block_number = size / BLOCK_SIZE + (size % BLOCK_SIZE != 0);
         printf("block_number: %u\n", block_number);
         unsigned int data_blocks[size / BLOCK_SIZE + (size % BLOCK_SIZE != 0)];
