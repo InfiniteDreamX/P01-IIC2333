@@ -32,7 +32,8 @@ int main(int argc, char *argv[])
         }
         if (strcmp(command, "cr_open") == 0)
         {
-            crFILE *guides = cr_open(4, "3/Baroque.mp3", 'r');
+            crFILE *guides = cr_open(4, "write.txt", 'r');
+            /*
             uint8_t bytes[100];
             uint8_t bytes2[100];
             int bytes_read = cr_read(guides, bytes, 100);
@@ -41,6 +42,7 @@ int main(int argc, char *argv[])
             int bytes2_read = cr_read(guides, bytes2, 100);
             printf("Se leyeron %i bytes\n", bytes2_read);
             print_bytes_ascii(bytes2, 100);
+            */
         }
         if (strcmp(command, "cr_ls") == 0)
         {

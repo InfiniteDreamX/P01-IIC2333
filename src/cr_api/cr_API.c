@@ -73,7 +73,7 @@ crFILE *cr_open(unsigned disk, char *filename, char mode)
         uint8_t index_block_position_buffer[3];
         unsigned int index_block_position;
 
-        // falta obtener posicion del index block
+        //  obtener posicion del index block
         int current_byte = 0;
         int filename_len = strlen(filename);
         uint8_t info_buffer[1];
@@ -90,17 +90,11 @@ crFILE *cr_open(unsigned disk, char *filename, char mode)
                 read_block_partition_index(disk, 0, name_buffer, current_byte + 3, 29);
                 if (memcmp(filename, name_buffer, filename_len) == 0)
                 {
-                    if (filename_len < 29)
-                    {
-                        if (name_buffer[filename_len] == 0)
-                        {
-                            // return 1;
+                    if (filename_len < 29) {
+                        if (name_buffer[filename_len] == 0) {
                             was_located = 1;
                         }
-                    }
-                    else
-                    {
-                        // return 1;
+                    } else {
                         was_located = 1;
                     }
                 }
@@ -170,25 +164,77 @@ crFILE *cr_open(unsigned disk, char *filename, char mode)
         crFILE *crfile = malloc(sizeof(crFILE) + sizeof(unsigned int) * block_number);
         crfile->partition = disk;
         crfile->block = 0;
+        crfile->index_block=index_block_position;
         crfile->block_number = block_number;
         crfile->byte = 0;
         crfile->mode = mode;
         crfile->references = references;
         crfile->size = size;
         memcpy(crfile->data_blocks, data_blocks, sizeof(unsigned int) * block_number);
-        printf("%c\n", crfile->mode);
+        printf("mode: %c\n", crfile->mode);
         printf("compare mode: %d\n", crfile->mode == 'r');
-        printf("%u\n", crfile->partition);
-        printf("%u\n", crfile->references);
-        printf("%lu\n", crfile->size);
-        printf("%u\n", crfile->data_blocks[0]);
+        printf("partition: %u\n", crfile->partition);
+        printf("references: %u\n", crfile->references);
+        printf("size: %lu\n", crfile->size);
+        printf("data_blocks[0]: %u\n", crfile->data_blocks[0]);
+        printf("index_block: %u\n", crfile->index_block);
         return crfile;
     }
-    else if (mode == 'w' && !cr_exists(disk, filename))
-    {
+    else if (mode == 'w' && !cr_exists(disk, filename)){
+        uint8_t directory_entry[32];
+        int entry_size = 32;
+        for(int i = 0; i < 256; i++)
+        {
+            read_block_partition_index(disk, 0, directory_entry, entry_size * i, 32);
+            uint8_t first_byte = directory_entry[0];
+            uint8_t valid_bit = first_byte >> 7;
+            if (!valid_bit)
+            {
+                unsigned int block_direction = get_empty_block_direction(disk);
+                uint8_t name_buff[29];
+                memcpy(name_buff, filename, strlen(filename));
+                name_buff[strlen(filename)] = '\0';
+                uint8_t valid_index_buffer[3];
+                memcpy((uint8_t*)valid_index_buffer,(uint8_t*)&block_direction,sizeof(uint8_t)*3);
+                ReverseArray(valid_index_buffer, 3);
+                valid_index_buffer[0] = set_bit_to_byte(valid_index_buffer[0], 7, 1);
+                write_block_partition_index(disk, 0, valid_index_buffer, entry_size * i, 3); // 3 bytes en entrada directorio
+                write_block_partition_index(disk, 0, name_buff, entry_size * i + 3, 29); // Nombre en entrada directorio
+                unsigned int data_block_direction = get_empty_block_direction(disk);           
+                uint8_t valid_data_index_buffer[4]; // 
+                memcpy((uint8_t*)valid_data_index_buffer,(uint8_t*)&data_block_direction,sizeof(uint8_t)*4);
+                ReverseArray(valid_data_index_buffer, 4);
+                write_block_index(block_direction, valid_data_index_buffer, 12, 4); // direccion bloque de datos, en bloque indice
+                unsigned int references = 1;
+                uint8_t references_buffer[4];
+                unsigned long size = 0;
+                uint8_t size_buffer[8];
+                memcpy((uint8_t*)references_buffer,(uint8_t*)&references,sizeof(uint8_t)*4);
+                memcpy((uint8_t*)size_buffer,(uint8_t*)&size,sizeof(uint8_t)*8);
+                ReverseArray(references_buffer, 4);
+                ReverseArray(size_buffer, 8);
+                write_block_index(block_direction, references_buffer, 0, 4); // referencias, en bloque indice
+                write_block_index(block_direction, size_buffer, 4, 8); // tamaño, en bloque indice
+                crFILE *crfile = malloc(sizeof(crFILE) + sizeof(unsigned int) * 1);
+                crfile->mode = mode;
+                crfile->partition = disk;
+                crfile->references = references;
+                crfile->size = size;
+                crfile->byte = 0;
+                crfile->index_block = block_direction;
+                crfile->block = data_block_direction; // ES DECIR,  EN MODO 'w', block  REPRESENTA EL PUNTERO AL BLOQUE DE DATOS EN QUE SE ESTA ESCRIBIENDO
+                printf("%c\n", crfile->mode);
+                printf("%u\n", crfile->partition);
+                printf("%u\n", crfile->references);
+                printf("%lu\n", crfile->size);
+                printf("%u\n", crfile->byte);
+                printf("%u\n", crfile->index_block);
+                printf("%u\n", crfile->block);
+                return crfile;
+            }
+        }
     }
-    else
-    {
+    else{
         exit_with_error("No se pudo abrir el archivo %s.\n", filename);
     }
 }

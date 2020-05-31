@@ -6,6 +6,7 @@
 
 #include "../cr_api/cr_API.h"
 #include "common_utils.h"
+#include "byte_utils.h"
 
 // Funcioens comunes
 void check_input_range(unsigned int block_number, unsigned int start_index,
@@ -93,6 +94,22 @@ unsigned int read_block(unsigned int block_number, uint8_t* buffer,
   return read_block_index(block_number, buffer, 0, n_bytes);
 }
 
+/////// UTILIDAD DE busqueda de bloque vacio ///////
+unsigned int get_empty_block_direction(unsigned int partition){
+  unsigned int block_direction = (partition - 1) * BLOCK_SIZE;
+  for (int k = 0; k < BLOCK_SIZE; k++){
+    uint8_t bitmap_byte[1];
+    read_block_partition_index(partition, 1, bitmap_byte, k, 1);
+    for (int j = 0; j < 8; j++) {
+      unsigned int block_used = get_bit_from_byte(bitmap_byte[0], 7 - j);
+      if (!block_used) {
+        return block_direction;
+      }
+      block_direction += 1;
+    }
+  }
+  exit_with_error("No quedan bloques vacios en particion %u\n", partition);
+}
 /////// UTILIDADES DE ESCRITURA ///////
 
 unsigned int write_block_index(unsigned int block_number, uint8_t* buffer,
