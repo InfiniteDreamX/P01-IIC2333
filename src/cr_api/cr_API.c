@@ -224,7 +224,6 @@ crFILE* cr_open(unsigned disk, char* filename, char mode)
                                         memcpy((uint8_t*)references_buffer,(uint8_t*)&references,sizeof(uint8_t)*4);
                                         memcpy((uint8_t*)size_buffer,(uint8_t*)&size,sizeof(uint8_t)*8);
                                         // escribir bien (usar funcion para esto)
-                                        // https://stackoverflow.com/questions/47745149/reverse-an-integer-array-in-c
                                         for(int x = 0; x<2; x++) {
                                             uint8_t temp = references_buffer[x];
                                             references_buffer[x] = references_buffer[4-x-1];

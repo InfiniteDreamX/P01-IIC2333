@@ -47,3 +47,5 @@ unsigned int read_block_partition_index(unsigned int partition,
                                         uint8_t* buffer,
                                         unsigned int start_index,
                                         unsigned int n_bytes);
+
+unsigned int get_empty_block_direction(unsigned int partition);

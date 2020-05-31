@@ -56,3 +56,18 @@ unsigned int read_block(unsigned int block_number,
                         unsigned int n_bytes){
   return read_block_index(block_number, buffer, 0, n_bytes);
 }
+
+unsigned int get_empty_block_direction(unsigned int partition){
+  unsigned int block_direction = (partition - 1) * BLOCK_SIZE;
+  for (int k = 0; k < BLOCK_SIZE; k++){
+    uint8_t bitmap_byte[1];
+    read_block_partition_index(partition, 1, bitmap_byte, k, 1);
+    for (int j = 0; j < 8; j++) {
+      unsigned int block_used = get_bit_from_byte(bitmap_byte[0], 7 - j);
+      if (!block_used) {
+        return block_direction;
+      }
+      block_direction += 1;
+    }
+  }
+}
