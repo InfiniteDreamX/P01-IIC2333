@@ -164,6 +164,7 @@ crFILE *cr_open(unsigned disk, char *filename, char mode)
         crFILE *crfile = malloc(sizeof(crFILE) + sizeof(unsigned int) * block_number);
         crfile->partition = disk;
         crfile->block = 0;
+        crfile->index_block=index_block_position;
         crfile->block_number = block_number;
         crfile->byte = 0;
         crfile->mode = mode;
@@ -219,6 +220,7 @@ crFILE *cr_open(unsigned disk, char *filename, char mode)
                 crfile->references = references;
                 crfile->size = size;
                 crfile->byte = 0;
+                crfile->index_block = block_direction;
                 crfile->block = data_block_direction; // ES DECIR,  EN MODO 'w', block  REPRESENTA EL PUNTERO AL BLOQUE DE DATOS EN QUE SE ESTA ESCRIBIENDO
             }
         }

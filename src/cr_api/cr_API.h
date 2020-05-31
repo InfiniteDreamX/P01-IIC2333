@@ -8,6 +8,7 @@ struct cr_file
    unsigned int block; // bloque de datos actual.
    // IMPORTANTE: en 'r', block es el indice con el que obtenemos un puntero en el array data_blocks
    // en 'w', block es directamente un puntero, al bloque de datos al que se está escribiendo.
+   unsigned int index_block; // direccion del bloque indice del archivo
    unsigned int byte;  // indice dentro del bloque de datos actual
    int block_number;
    char mode; // r o w
