@@ -33,14 +33,16 @@ int main(int argc, char *argv[])
             unsigned disk;
             printf("Introduce el numero de particion (0-4): ");
             scanf("%u", &disk);
+            printf("DEBUG: Se introdujo la siguiente particion: %d\n", disk);
+
             char ans[1];
             printf("Formato hexadecimal? [y/n]: ");
             scanf("%s", ans);
             if (strcmp(ans, "y") == 0) {
-                cr_bitmap(0, true);
+                cr_bitmap(disk, true);
             } else 
             {
-                cr_bitmap(1, false);
+                cr_bitmap(disk, false);
             }
         }
         if (strcmp(command, "exit") == 0)

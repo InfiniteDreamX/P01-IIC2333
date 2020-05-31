@@ -28,6 +28,8 @@ void cr_mount(char* diskname)
 
 void cr_bitmap(unsigned disk, bool hex)
 {
+    // Rafa: Me funciona recibir el parametro
+    printf("DEBUG: Se recibio la siguiente partition en cr_bitmap: %d\n", disk);
     if (disk > 4)
     {
         exit_with_error("El numero de particion %d, no es valido.\n", disk);
@@ -59,7 +61,7 @@ void cr_bitmap(unsigned disk, bool hex)
             }
         }
 		printf("\n Bloques Ocupados: %d\n", used_blocks);
-		printf(" Bloques No Ocupados: %d\n", MAX_BLOCKS - used_blocks);
+		printf(" Bloques Libres: %d\n", MAX_BLOCKS - used_blocks);
 	} else 
     {
         read_block_partititon(disk, 1, block, BLOCK_SIZE);
@@ -81,7 +83,7 @@ void cr_bitmap(unsigned disk, bool hex)
             }
         }
         printf("\n Bloques Ocupados: %d\n", used_blocks);
-		printf(" Bloques No Ocupados: %d\n", BLOCK_SIZE - used_blocks);
+		printf(" Bloques Libres: %d\n", BLOCK_SIZE - used_blocks);
 	}
 }
 
