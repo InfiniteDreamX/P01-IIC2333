@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 // Define funciones para operaciones comunes, validas para cualquier contexto.
 
 // Bota el programa mostrando un mensaje de error.

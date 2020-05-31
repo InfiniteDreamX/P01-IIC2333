@@ -177,6 +177,7 @@ crFILE *cr_open(unsigned disk, char *filename, char mode)
         printf("%u\n", crfile->references);
         printf("%lu\n", crfile->size);
         printf("%u\n", crfile->data_blocks[0]);
+        printf("%u\n", crfile->index_block);
         return crfile;
     }
     else if (mode == 'w' && !cr_exists(disk, filename)){

@@ -6,6 +6,7 @@
 
 #include "../cr_api/cr_API.h"
 #include "common_utils.h"
+#include "byte_utils.h"
 
 // Funcioens comunes
 void check_input_range(unsigned int block_number, unsigned int start_index,
@@ -108,6 +109,7 @@ unsigned int get_empty_block_direction(unsigned int partition){
     }
   }
   exit_with_error("No quedan bloques vacios en particion %u\n", partition);
+}
 /////// UTILIDADES DE ESCRITURA ///////
 
 unsigned int write_block_index(unsigned int block_number, uint8_t* buffer,
