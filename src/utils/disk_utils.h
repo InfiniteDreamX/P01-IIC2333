@@ -48,4 +48,5 @@ unsigned int read_block_partition_index(unsigned int partition,
                                         unsigned int start_index,
                                         unsigned int n_bytes);
 
+// Retorna direccion del primer bloque vacio de la particion partition
 unsigned int get_empty_block_direction(unsigned int partition);
