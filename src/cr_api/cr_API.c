@@ -365,3 +365,15 @@ int cr_unload(unsigned disk, char *orig, char *dest)
         }
     }
 }
+
+int cr_softlink(unsigned disk_orig, unsigned disk_dest, char* orig)
+{
+    if (disk_orig > 4 || disk_orig < 1 || disk_dest > 4 || disk_dest < 1)
+    {
+        exit_with_error("Parametros de disco erroneos.\n");
+    }
+    if (!cr_exists(disk_orig, orig))
+    {
+        exit_with_error("El archivo %s no existe en la particion %i\n", orig, disk_orig);
+    }
+}

@@ -38,3 +38,4 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes);
    Finalmente retorna 0 si hubo exito */
 int cr_unload(unsigned disk, char* orig, char* dest);
 
+int cr_softlink(unsigned disk_orig, unsigned disk_dest, char* orig);
