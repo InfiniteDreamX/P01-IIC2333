@@ -27,7 +27,11 @@ int cr_exists(unsigned disk, char* filename);
 
 crFILE* cr_open(unsigned disk, char* filename, char mode);
 
+int cr_write(crFILE* file_desc, void* buffer, int nbytes);
+
 int cr_read(crFILE* file_desc, void* buffer, int nbytes);
+
+int cr_close(crFILE* file_desc);
 
 /* El funcionamiento de esta funcion sera el siguiente:
    - Si recibe un orig, entonces copia ese archivo a la ruta de desc. En ese caso, desc DEBE SER UN ARCHIVO y no un directorio
