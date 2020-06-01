@@ -14,7 +14,7 @@ static const int MAX_BLOCKS = 262144;         // bloques en todo el disco
 //      #include "../utils/disk_utils.h"
 //      cr_mount("simdiskfilled.bin");
 //      uint8_t bytes[BLOCK_SIZE];
-//      read_block_partititon(1, 0, bytes, BLOCK_SIZE); -> primer bloque es directorio!
+//      read_block_partition(1, 0, bytes, BLOCK_SIZE); -> primer bloque es directorio!
 //      print_bytes_ascii_cols(bytes, BLOCK_SIZE, 40);  -> Veremos nombres de archivos
 //      print_bytes_hex_cols(bytes, BLOCK_SIZE, 30); -> Vemos hexadecimal     
 
@@ -29,7 +29,7 @@ unsigned int read_block(unsigned int block_number, uint8_t* buffer,
 // Ejemplo: para leer 100 bytes del bloque directorio de la segunda particion:
 // uint8_t buff[100]; -> buffer en stack!
 // read_block_partition(2, 0, buff, 100);
-unsigned int read_block_partititon(unsigned int partition,
+unsigned int read_block_partition(unsigned int partition,
                                    unsigned int block_number, uint8_t* buffer,
                                    unsigned int n_bytes);
 
@@ -47,3 +47,22 @@ unsigned int read_block_partition_index(unsigned int partition,
                                         uint8_t* buffer,
                                         unsigned int start_index,
                                         unsigned int n_bytes);
+
+// Retorna direccion del primer bloque vacio de la particion partition
+unsigned int get_empty_block_direction(unsigned int partition);
+
+unsigned int write_block(unsigned int block_number, uint8_t* buffer,
+                         unsigned int n_bytes);
+
+unsigned int write_block_partition(unsigned int partition,
+                                    unsigned int block_number, uint8_t* buffer,
+                                    unsigned int n_bytes);
+
+unsigned int write_block_index(unsigned int block_number, uint8_t* buffer,
+                               unsigned int start_index, unsigned int n_bytes);
+
+unsigned int write_block_partition_index(unsigned int partition,
+                                         unsigned int block_number,
+                                         uint8_t* buffer,
+                                         unsigned int start_index,
+                                         unsigned int n_bytes);

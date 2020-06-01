@@ -4,16 +4,11 @@
 typedef struct cr_file crFILE;
 struct cr_file
 {
-   /*
-   unsigned int *start; // Puntero al inicio del archivo
-   unsigned int *current;  // Puntero al lugar actual de lectura
-   char mode; // r o w
-   unsigned long size; // size del archivo, son 8 bytes
-   unsigned int references; // Cantidad total de referencias
-   */
-   
    unsigned int partition; // particion donde se encuentra el archivo
-   unsigned int block; // bloque de datos actual
+   unsigned int block; // bloque de datos actual.
+   // IMPORTANTE: en 'r', block es el indice con el que obtenemos un puntero en el array data_blocks
+   // en 'w', block es directamente un puntero, al bloque de datos al que se está escribiendo.
+   unsigned int index_block; // direccion del bloque indice del archivo
    unsigned int byte;  // indice dentro del bloque de datos actual
    int block_number;
    char mode; // r o w
@@ -25,6 +20,8 @@ char* disk_name;
 void cr_mount(char* diskname);
 
 void cr_ls(unsigned disk);
+
+crFILE* cr_open(unsigned disk, char* filename, char mode);
 
 int cr_exists(unsigned disk, char* filename);
 
