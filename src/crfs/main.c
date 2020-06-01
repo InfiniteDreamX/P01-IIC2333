@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
         }
         if (strcmp(command, "cr_rm") == 0)
         {
-            // cr_rm(1, "Program in C.mkv");
+            // cr_rm(3, "Program in C.mkv");
             
             unsigned disk;
             printf("Introduce el numero de particion (1-4):");
