@@ -525,16 +525,16 @@ int cr_rm(unsigned disk, char* filename){
         printf("defined data blocks\n");
         for (int i = 0; i < block_number; i++) {
             unsigned int address = data_blocks[i];
-            printf("address: %u\n", address);
-            unsigned int n_byte = (address - (disk - 1) * PARTITION_SIZE) / 8;
-            unsigned int n_bit = (address - (disk - 1) * PARTITION_SIZE) % 8;
+            // printf("address: %u\n", address);
+            unsigned int n_byte = (address - (disk - 1) * BLOCKS_PARTITION) / 8;
+            unsigned int n_bit = (address - (disk - 1) * BLOCKS_PARTITION) % 8;
             uint8_t bitmap_byte[1];
-            printf("pre bitmap byte\n");
-            printf("n_byte: %u\n", n_byte);
-            printf("n_bit: %u\n", n_bit);
+            // printf("pre bitmap byte\n");
+            // printf("n_byte: %u\n", n_byte);
+            // printf("n_bit: %u\n", n_bit);
             read_block_partition_index(disk, 1, bitmap_byte, n_byte, 1);
             bitmap_byte[0] = set_bit_to_byte(bitmap_byte[0], 7 - n_bit, 0);
-            printf("pre bitmap write\n");
+            // printf("pre bitmap write\n");
             write_block_partition_index(disk, 1, bitmap_byte, n_byte, 1);
         }
         write_block_partition_index(disk, 0, index_block_position_buffer, found_entry_byte, 3);
