@@ -36,3 +36,5 @@ int cr_read(crFILE* file_desc, void* buffer, int nbytes);
 int cr_unload(unsigned disk, char* orig, char* dest);
 
 int cr_softlink(unsigned disk_orig, unsigned disk_dest, char* orig);
+
+int cr_hardlink(unsigned disk, char* orig, char* dest);

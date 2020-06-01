@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
         }
         if (strcmp(command, "cr_open") == 0)
         {
-            crFILE *guides = cr_open(1, "2/text.txt", 'r');
+            crFILE *guides = cr_open(1, "hardlink2.txt", 'r');
             
             uint8_t bytes[100];
             uint8_t bytes2[100];
@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
             int bytes2_read = cr_read(guides, bytes2, 100);
             printf("Se leyeron %i bytes\n", bytes2_read);
             print_bytes_ascii(bytes2, 100);
+            printf("%i\n",guides->references);
             
         }
         if (strcmp(command, "cr_softlink") == 0)
@@ -58,6 +59,19 @@ int main(int argc, char *argv[])
             printf("Introduce el nombre del archivo origen:");
             scanf("%s", filename);
             cr_softlink(disk_orig, disk_dest, filename);
+        }
+        if (strcmp(command, "cr_hardlink") == 0)
+        {
+            unsigned disk_orig;
+            printf("Introduce el numero de particion origen (1-4):");
+            scanf("%u", &disk_orig);
+            char filename[29];
+            printf("Introduce el nombre del archivo origen:");
+            scanf("%s", filename);
+            char filename2[29];
+            printf("Introduce el nombre del archivo destino:");
+            scanf("%s", filename2);
+            cr_hardlink(disk_orig, filename, filename2);
         }
         if (strcmp(command, "cr_ls") == 0)
         {
