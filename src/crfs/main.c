@@ -116,6 +116,19 @@ int main(int argc, char *argv[])
                 }
             }
         }
+        if (strcmp(command, "cr_rm") == 0)
+        {
+            // cr_rm(2, "Program in C.mkv");
+            
+            unsigned disk;
+            printf("Introduce el numero de particion (1-4):");
+            scanf("%u", &disk);
+            char filename[29];
+            printf("Introduce el nombre del archivo:");
+            scanf("%s", filename);
+            printf("%s\n", filename);
+            printf("%i\n", cr_rm(disk, filename));
+        }
         if (strcmp(command, "exit") == 0)
         {
             printf("Adios!\n");

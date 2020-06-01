@@ -418,6 +418,154 @@ int cr_unload(unsigned disk, char *orig, char *dest)
     }
 }
 
+int cr_rm(unsigned disk, char* filename){
+    int filename_len = strlen(filename);
+    if (filename_len > 29)
+    {
+        exit_with_error("Nombre de archivo muy largo: %i caracteres. (Maximo 29)", filename_len);
+    }
+    if (!cr_exists(disk, filename)) {
+        exit_with_error("El archivo %s no existe.", filename);
+    }
+
+    uint8_t index_block_position_buffer[3];
+    unsigned int index_block_position;
+    int current_byte = 0;
+    uint8_t info_buffer[1];
+    uint8_t name_buffer[29];
+    int was_located = 0;
+    int found_entry_byte = 0;
+    while (current_byte < BLOCK_SIZE)
+    {
+        read_block_partition_index(disk, 0, info_buffer, current_byte, 1);
+        if (get_bit_from_byte(info_buffer[0], 7))
+        {
+            read_block_partition_index(disk, 0, name_buffer, current_byte + 3, 29);
+            if (memcmp(filename, name_buffer, filename_len) == 0)
+            {
+                if (filename_len < 29)
+                {
+                    if (name_buffer[filename_len] == 0)
+                    {
+                        was_located = 1;
+                    }
+                }
+                else
+                {
+                    was_located = 1;
+                }
+            }
+        }
+        if (was_located)
+        {
+            printf("LOCATED\n");
+            found_entry_byte = current_byte;
+            current_byte = BLOCK_SIZE;
+        }
+        else
+        {
+            current_byte += 32;
+        }
+    }
+    read_block_partition_index(disk, 0, index_block_position_buffer, found_entry_byte, 3);
+    index_block_position_buffer[0] = set_bit_to_byte(index_block_position_buffer[0], 7, 0);
+    index_block_position = (index_block_position_buffer[0] << 16) | (index_block_position_buffer[1] << 8) | (index_block_position_buffer[2]);
+    // write_block_partition_index(disk, 0, index_block_position_buffer, found_entry_byte, 3);
+    char link1[] = "1/";
+    char link2[] = "2/";
+    char link3[] = "3/";
+    char link4[] = "4/";
+    if (!(memcmp(filename, link1, 2) && memcmp(filename, link2, 2) && memcmp(filename, link3, 2) && memcmp(filename, link4, 2)))
+    {
+        // escribir index_block_position_buffer, ahora con primer bit en 0. Por lo que la entrada está libre.
+        write_block_partition_index(disk, 0, index_block_position_buffer, found_entry_byte, 3);
+        return 1; // nada mas que hacer para un softlink
+    }
+    uint8_t references_buff[4];
+    read_block_index(index_block_position, references_buff, 0, 4);
+    unsigned int references = (references_buff[0] << 24) | (references_buff[1] << 16) | (references_buff[2] << 8) | (references_buff[3]);
+    references -= 1;
+    memcpy((uint8_t*)references_buff,(uint8_t*)&references,sizeof(uint8_t)*4);
+    ReverseArray(references_buff, 4);
+    // write_block_index(index_block_position, references_buff, 0, 4);
+    if (references == 0) {
+        uint8_t size_buff[8];
+        read_block_index(index_block_position, size_buff, 4, 8);
+
+        unsigned long size = 0;
+        size |= size_buff[0];
+        size = size << 8;
+        size |= size_buff[1];
+        size = size << 8;
+        size |= size_buff[2];
+        size = size << 8;
+        size |= size_buff[3];
+        size = size << 8;
+        size |= size_buff[4];
+        size = size << 8;
+        size |= size_buff[5];
+        size = size << 8;
+        size |= size_buff[6];
+        size = size << 8;
+        size |= size_buff[7];
+        int block_number = size / BLOCK_SIZE + (size % BLOCK_SIZE != 0);
+        printf("block_number: %u\n", block_number);
+        unsigned int data_blocks[size / BLOCK_SIZE + (size % BLOCK_SIZE != 0)];
+        uint8_t indirect_block_buffer[4];
+        read_block_index(index_block_position, indirect_block_buffer, BLOCK_SIZE - 4, 4);
+        unsigned int indirect_block = (indirect_block_buffer[0] << 24) | (indirect_block_buffer[1] << 16) | (indirect_block_buffer[2] << 8) | (indirect_block_buffer[3]);
+        printf("indirect_block: %u\n", indirect_block);
+        for (int i = 0; i < block_number; i++)
+        {
+            uint8_t address_buffer[4];
+            if (i < 2044)
+            {
+                read_block_index(index_block_position, address_buffer, 12 + 4 * i, 4);
+            }
+            else
+            {
+                read_block_index(indirect_block, address_buffer, (i - 2044) * 4, 4);
+            }
+            data_blocks[i] = (address_buffer[0] << 24) | (address_buffer[1] << 16) | (address_buffer[2] << 8) | (address_buffer[3]);
+        }
+        printf("defined data blocks\n");
+        for (int i = 0; i < block_number; i++) {
+            unsigned int address = data_blocks[i];
+            // printf("address: %u\n", address);
+            unsigned int n_byte = (address - (disk - 1) * BLOCKS_PARTITION) / 8;
+            unsigned int n_bit = (address - (disk - 1) * BLOCKS_PARTITION) % 8;
+            uint8_t bitmap_byte[1];
+            // printf("pre bitmap byte\n");
+            // printf("n_byte: %u\n", n_byte);
+            // printf("n_bit: %u\n", n_bit);
+            read_block_partition_index(disk, 1, bitmap_byte, n_byte, 1);
+            bitmap_byte[0] = set_bit_to_byte(bitmap_byte[0], 7 - n_bit, 0);
+            // printf("pre bitmap write\n");
+            write_block_partition_index(disk, 1, bitmap_byte, n_byte, 1);
+        }
+        uint8_t bitmap_byte[1];
+        unsigned int n_byte_index = (index_block_position - (disk - 1) * BLOCKS_PARTITION) / 8;
+        unsigned int n_bit_index = (index_block_position - (disk - 1) * BLOCKS_PARTITION) % 8;
+        read_block_partition_index(disk, 1, bitmap_byte, n_byte_index, 1);
+        bitmap_byte[0] = set_bit_to_byte(bitmap_byte[0], 7 - n_bit_index, 0);
+        write_block_partition_index(disk, 1, bitmap_byte, n_byte_index, 1);
+        if(indirect_block){
+            unsigned int n_byte_indirect = (indirect_block - (disk - 1) * BLOCKS_PARTITION) / 8;
+            unsigned int n_bit_indirect = (indirect_block - (disk - 1) * BLOCKS_PARTITION) % 8;
+            read_block_partition_index(disk, 1, bitmap_byte, n_byte_indirect, 1);
+            bitmap_byte[0] = set_bit_to_byte(bitmap_byte[0], 7 - n_bit_indirect, 0);
+            write_block_partition_index(disk, 1, bitmap_byte, n_byte_indirect, 1);
+        }
+
+        write_block_partition_index(disk, 0, index_block_position_buffer, found_entry_byte, 3);
+        printf("No more references!!\n");
+        return 1;
+    }
+    write_block_index(index_block_position, references_buff, 0, 4);
+    write_block_partition_index(disk, 0, index_block_position_buffer, found_entry_byte, 3);
+    return 1;
+}
+
 int cr_softlink(unsigned disk_orig, unsigned disk_dest, char *orig)
 {
     if (disk_orig > 4 || disk_orig < 1 || disk_dest > 4 || disk_dest < 1)
