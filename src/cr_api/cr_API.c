@@ -412,6 +412,9 @@ int cr_unload(unsigned disk, char *orig, char *dest)
     }
 }
 
+
+
+/*
 int cr_rm(unsigned disk, char* filename){
     int filename_len = strlen(filename);
     if (filename_len > 29)
@@ -558,4 +561,4 @@ int cr_rm(unsigned disk, char* filename){
     write_block_index(index_block_position, references_buff, 0, 4);
     write_block_partition_index(disk, 0, index_block_position_buffer, found_entry_byte, 3);
     return 1;
-}
+}*/
