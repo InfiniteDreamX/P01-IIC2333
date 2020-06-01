@@ -83,8 +83,8 @@ int cr_write(crFILE* file_desc, void* buffer, int nbytes)
             next_block = 0;
             next_byte = file_desc->byte + to_write - bytes_written;
         }
-        // Nico: Aca no se bien como cargar el block buffer con el buffer
         uint8_t block_buffer[written_qty];
+        memcpy(block_buffer, buffer + bytes_written, written_qty);
         write_block_partition_index(file_desc -> partition,
                                     file_desc->data_blocks[file_desc->block_number],
                                     block_buffer,
@@ -102,7 +102,7 @@ int cr_write(crFILE* file_desc, void* buffer, int nbytes)
             // Escribo en el bloque indice
             // Tengo que cargar el empty block al buffer?
             write_block_index(file_desc -> index_block,
-                              empty_block,
+                             (uint8_t*)&empty_block,
                               12 + 4*file_desc->block_number,
                               4);
             file_desc->block = empty_block;
