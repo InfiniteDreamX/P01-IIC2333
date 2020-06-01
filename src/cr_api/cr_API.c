@@ -99,8 +99,6 @@ int cr_write(crFILE* file_desc, void* buffer, int nbytes)
         {
             unsigned empty_block;
             empty_block = get_empty_block_direction(file_desc -> partition);
-            // Escribo en el bloque indice
-            // Tengo que cargar el empty block al buffer?
             write_block_index(file_desc -> index_block,
                              (uint8_t*)&empty_block,
                               12 + 4*file_desc->block_number,
@@ -116,6 +114,12 @@ int cr_write(crFILE* file_desc, void* buffer, int nbytes)
         file_desc->byte = 0;
     }
     return bytes_written;
+}
+
+int cr_close(crFILE* file_desc)
+{
+    free(file_desc);
+    return 0;
 }
 
 crFILE *cr_open(unsigned disk, char *filename, char mode)
