@@ -454,3 +454,97 @@ int cr_softlink(unsigned disk_orig, unsigned disk_dest, char *orig)
     }
     exit_with_error("No se encontro espacio para crear el softlink en esta particion\n");
 }
+
+int cr_hardlink(unsigned disk, char *orig, char *dest)
+{
+    if (disk > 4 || disk < 1)
+    {
+        exit_with_error("Particion no existente.\n");
+    }
+    if (!cr_exists(disk, orig))
+    {
+        exit_with_error("Archivo original no existe\n");
+    }
+    uint8_t index_block_position_buffer[3];
+    unsigned int index_block_position;
+
+    //  obtener posicion del index block
+    int current_byte = 0;
+    int filename_len = strlen(orig);
+    uint8_t info_buffer[1];
+    uint8_t name_buffer[29];
+    int was_located = 0;
+    int found_entry_byte = 0;
+    while (current_byte < BLOCK_SIZE)
+    {
+        // uint8_t info_buffer[1];
+        read_block_partition_index(disk, 0, info_buffer, current_byte, 1);
+        if (get_bit_from_byte(info_buffer[0], 7))
+        {
+            // uint8_t name_buffer[29];
+            read_block_partition_index(disk, 0, name_buffer, current_byte + 3, 29);
+            if (memcmp(orig, name_buffer, filename_len) == 0)
+            {
+                if (filename_len < 29)
+                {
+                    if (name_buffer[filename_len] == 0)
+                    {
+                        was_located = 1;
+                    }
+                }
+                else
+                {
+                    was_located = 1;
+                }
+            }
+        }
+        if (was_located)
+        {
+            //printf("LOCATED\n");
+            found_entry_byte = current_byte;
+            current_byte = BLOCK_SIZE; // para terminar el while, y mantener el valor de la variable (en found_entry_byte)
+        }
+        else
+        {
+            current_byte += 32;
+        }
+    }
+    read_block_partition_index(disk, 0, index_block_position_buffer, found_entry_byte, 3);
+    index_block_position_buffer[0] = set_bit_to_byte(index_block_position_buffer[0], 7, 0);
+    index_block_position = (index_block_position_buffer[0] << 16) | (index_block_position_buffer[1] << 8) | (index_block_position_buffer[2]);
+    //printf("index_block_partition: %u\n", index_block_position);
+    uint8_t references_buff[4];
+    read_block_index(index_block_position, references_buff, 0, 4);
+    unsigned int references = (references_buff[0] << 24) | (references_buff[1] << 16) | (references_buff[2] << 8) | (references_buff[3]);
+    references += 1;
+    uint8_t references_buffer[4];
+    memcpy((uint8_t *)references_buffer, (uint8_t *)&references, sizeof(uint8_t) * 4);
+    ReverseArray(references_buffer, 4);
+    
+    //Ahora escribimos el hardlink. Si esto se logra, entonces se modificara el bloque indice para agregarle 1 referencia
+    uint8_t directory_entry[32];
+    int entry_size = 32;
+   
+    for (int i = 0; i < 256; i++)
+    {
+        read_block_partition_index(disk, 0, directory_entry, entry_size * i, 32);
+        uint8_t first_byte = directory_entry[0];
+        uint8_t valid_bit = first_byte >> 7;
+        if (!valid_bit)
+        {
+            uint8_t name_buff[29];
+            memcpy(name_buff, dest, strlen(dest));
+            name_buff[strlen(dest)] = '\0';
+            uint8_t valid_index_buffer[3];
+            memcpy((uint8_t *)valid_index_buffer, (uint8_t *)&index_block_position, sizeof(uint8_t) * 3);
+            ReverseArray(valid_index_buffer, 3);
+            valid_index_buffer[0] = set_bit_to_byte(valid_index_buffer[0], 7, 1);
+            write_block_partition_index(disk, 0, valid_index_buffer, entry_size * i, 3); // 3 bytes en entrada directorio
+            write_block_partition_index(disk, 0, name_buff, entry_size * i + 3, 29);
+            write_block_index(index_block_position, references_buffer, 0, 4); 
+            return 0;
+        }
+    }
+    exit_with_error("No queda espacio en el disco para crear el hardlink\n");
+
+}
