@@ -537,6 +537,18 @@ int cr_rm(unsigned disk, char* filename){
             // printf("pre bitmap write\n");
             write_block_partition_index(disk, 1, bitmap_byte, n_byte, 1);
         }
+        uint8_t bitmap_byte[1];
+        unsigned int n_byte_index = (index_block_position - (disk - 1) * BLOCKS_PARTITION) / 8;
+        unsigned int n_bit_index = (index_block_position - (disk - 1) * BLOCKS_PARTITION) % 8;
+        unsigned int n_byte_indirect = (indirect_block - (disk - 1) * BLOCKS_PARTITION) / 8;
+        unsigned int n_bit_indirect = (indirect_block - (disk - 1) * BLOCKS_PARTITION) % 8;
+        read_block_partition_index(disk, 1, bitmap_byte, n_byte_index, 1);
+        bitmap_byte[0] = set_bit_to_byte(bitmap_byte[0], 7 - n_bit_index, 0);
+        write_block_partition_index(disk, 1, bitmap_byte, n_byte_index, 1);
+        read_block_partition_index(disk, 1, bitmap_byte, n_byte_indirect, 1);
+        bitmap_byte[0] = set_bit_to_byte(bitmap_byte[0], 7 - n_bit_indirect, 0);
+        write_block_partition_index(disk, 1, bitmap_byte, n_byte_indirect, 1);
+
         write_block_partition_index(disk, 0, index_block_position_buffer, found_entry_byte, 3);
         return 1;
     }
