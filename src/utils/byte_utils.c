@@ -7,7 +7,7 @@
 
 #include "common_utils.h"
 
-int SPACING = 2;
+int SPACING = 0;
 
 // Source:
 // https://stackoverflow.com/questions/1024389/print-an-int-in-binary-representation-using-c
