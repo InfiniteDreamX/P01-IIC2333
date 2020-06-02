@@ -23,13 +23,32 @@ int main(int argc, char *argv[])
         if (strcmp(command, "cr_exists") == 0)
         {
             unsigned disk;
-            printf("Introduce el numero de particion (1-4):");
+            printf("Introduce el numero de particion (1-4): ");
             scanf("%u", &disk);
             char filename[29];
-            printf("Introduce el nombre del archivo:");
+            printf("Introduce el nombre del archivo: ");
             scanf("%s", filename);
             printf("%i\n", cr_exists(disk, filename));
         }
+
+        if (strcmp(command, "cr_bitmap") == 0)
+        {
+            unsigned disk;
+            printf("Introduce el numero de particion (0-4): ");
+            scanf("%u", &disk);
+            printf("DEBUG: Se introdujo la siguiente particion: %d\n", disk);
+
+            char ans[1];
+            printf("Formato hexadecimal? [y/n]: ");
+            scanf("%s", ans);
+            if (strcmp(ans, "y") == 0) {
+                cr_bitmap(disk, true);
+            } else 
+            {
+                cr_bitmap(disk, false);
+            }
+        }
+
         if (strcmp(command, "cr_open") == 0)
         {
             crFILE *guides = cr_open(1, "hardlink2.txt", 'r');

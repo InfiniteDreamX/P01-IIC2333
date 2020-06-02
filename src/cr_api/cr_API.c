@@ -1,6 +1,7 @@
 #include "cr_API.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include "../utils/disk_utils.h"
 #include "../utils/byte_utils.h"
 #include "../utils/common_utils.h"
@@ -10,10 +11,71 @@ void cr_mount(char *diskname)
     disk_name = diskname;
 }
 
+
+void cr_bitmap(unsigned disk, bool hex)
+{
+    // Rafa: Me funciona recibir el parametro
+    printf("DEBUG: Se recibio la siguiente partition en cr_bitmap: %d\n", disk);
+    if (disk > 4)
+    {
+        exit_with_error("El numero de particion %d, no es valido.\n", disk);
+    }
+    uint8_t block[BLOCK_SIZE];
+    uint8_t buffer[1];
+	int used_blocks = 0;
+    int bit;
+	if (disk == 0) 
+    {
+		for (int d = 1; d < 5; d++) 
+        {
+            read_block_partititon(d, 1, block, BLOCK_SIZE);
+            if (hex) 
+            {
+                print_bytes_hex_cols(block, BLOCK_SIZE, 12);
+            } else 
+            {
+                print_bytes_binary_cols(block, BLOCK_SIZE, 12);
+            }
+            for (int byte = 0; byte < BLOCK_SIZE; byte++)
+            {
+                read_block_partition_index(d, 1, buffer, byte, 1);
+                for (int b = 0; b < 8; b++)
+                {
+                    bit = get_bit_from_byte(buffer[0], b);
+                    used_blocks = used_blocks + bit;
+                }
+            }
+        }
+		printf("\n Bloques Ocupados: %d\n", used_blocks);
+		printf(" Bloques Libres: %d\n", MAX_BLOCKS - used_blocks);
+	} else 
+    {
+        read_block_partititon(disk, 1, block, BLOCK_SIZE);
+        if (hex) 
+        {
+            print_bytes_hex_cols(block, BLOCK_SIZE, 12);
+        } else 
+        {
+            print_bytes_binary_cols(block, BLOCK_SIZE, 12);
+        }
+        for (int byte = 0; byte < BLOCK_SIZE; byte++)
+        {   
+            // printf("%d\n", byte);
+            read_block_partition_index(disk, 1, buffer, byte, 1);
+            for (int b = 0; b < 8; b++)
+            {
+                bit = get_bit_from_byte(buffer[0], b);
+                used_blocks = used_blocks + bit;
+            }
+        }
+        printf("\n Bloques Ocupados: %d\n", used_blocks);
+		printf(" Bloques Libres: %d\n", BLOCK_SIZE - used_blocks);
+	}
+}
+
 void cr_ls(unsigned disk)
 {
-    if (disk < 1 || disk > 4)
-    {
+    if (disk < 1 || disk > 4){
         exit_with_error("El numero de particion %d, no es valido.\n", disk);
     }
     printf("cr_ls(%d)--------------------\n", disk);
