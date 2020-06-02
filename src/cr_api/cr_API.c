@@ -103,6 +103,87 @@ void cr_ls(unsigned disk)
     printf("----------------------------\n");
 }
 
+int cr_write(crFILE* file_desc, void* buffer, int nbytes)
+{
+    if (file_desc->mode != 'w')
+    {
+        printf("El modo del archivo no es 'w'\n");
+        return 0;
+    }
+    int current_byte = file_desc->byte + file_desc->block_number * BLOCK_SIZE;
+    int to_write;
+    int end_file = 0;
+    if (nbytes > file_desc->size - current_byte)
+    {
+        to_write = file_desc->size - current_byte;
+        end_file = 1;
+    }
+    else
+    {
+        to_write = nbytes;
+    }
+
+    // Escribo solo los bytes que faltan. Si escribo mas bytes de 
+    // los que faltan -> termine el archivo
+    int bytes_written = 0;
+    while (bytes_written != to_write)
+    {
+        int written_qty;
+        int next_block;
+        int next_byte;
+
+        // Lo que queda de bloque < lo que me queda por escribir
+        if (BLOCK_SIZE - file_desc->byte <= to_write - bytes_written)
+        {   
+            written_qty = BLOCK_SIZE - file_desc->byte;
+            next_block = 1;
+            next_byte = 0;
+        }
+        else
+        {
+            written_qty = to_write - bytes_written;
+            next_block = 0;
+            next_byte = file_desc->byte + to_write - bytes_written;
+        }
+        uint8_t block_buffer[written_qty];
+        memcpy(block_buffer, buffer + bytes_written, written_qty);
+        write_block_partition_index(file_desc -> partition,
+                                    file_desc->data_blocks[file_desc->block_number],
+                                    block_buffer,
+                                    file_desc -> byte,
+                                    written_qty);
+
+        bytes_written += written_qty;
+        file_desc->block_number += next_block;
+        file_desc->byte = next_byte;
+                                    
+        if (next_block) 
+        {
+            unsigned empty_block;
+            empty_block = get_empty_block_direction(file_desc -> partition);
+            write_block_index(file_desc -> index_block,
+                             (uint8_t*)&empty_block,
+                              12 + 4*file_desc->block_number,
+                              4);
+            file_desc->block = empty_block;
+            file_desc->block_number = file_desc->block_number + 1;
+            file_desc->data_blocks[file_desc->block_number] = empty_block;
+        }
+    }
+    if (end_file)
+    {
+        file_desc->block = 0;
+        file_desc->byte = 0;
+    }
+    return bytes_written;
+}
+
+int cr_close(crFILE* file_desc)
+{
+    free(file_desc);
+    return 0;
+}
+
 crFILE *cr_open(unsigned disk, char *filename, char mode)
 {
     printf("EN FUNCION\n");
@@ -245,8 +326,7 @@ crFILE *cr_open(unsigned disk, char *filename, char mode)
         printf("data_blocks[0]: %u\n", crfile->data_blocks[0]);
         printf("index_block: %u\n", crfile->index_block);
         return crfile;
-    }
-    else if (mode == 'w' && !cr_exists(disk, filename))
+    } else if (mode == 'w' && !cr_exists(disk, filename))
     {
         uint8_t directory_entry[32];
         int entry_size = 32;
