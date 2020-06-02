@@ -1,5 +1,6 @@
 #pragma once
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct cr_file crFILE;
 struct cr_file
@@ -25,6 +26,9 @@ crFILE* cr_open(unsigned disk, char* filename, char mode);
 
 int cr_exists(unsigned disk, char* filename);
 
+
+void cr_bitmap(unsigned disk, bool hex);
+
 crFILE* cr_open(unsigned disk, char* filename, char mode);
 
 int cr_write(crFILE* file_desc, void* buffer, int nbytes);
@@ -38,4 +42,12 @@ int cr_close(crFILE* file_desc);
    - Si recibe NULL, copia toda la particion (o el disco entero) en la CARPETA dest. Lo que hace es copiar archivo por archivo y los deja todos dentro de ese directorio
    Finalmente retorna 0 si hubo exito */
 int cr_unload(unsigned disk, char* orig, char* dest);
+
+
+int cr_rm(unsigned disk, char* filename);
+
+
+int cr_softlink(unsigned disk_orig, unsigned disk_dest, char* orig);
+
+int cr_hardlink(unsigned disk, char* orig, char* dest);
 
