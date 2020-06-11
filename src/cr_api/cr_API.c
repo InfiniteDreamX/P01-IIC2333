@@ -28,7 +28,7 @@ void cr_bitmap(unsigned disk, bool hex)
     {
 		for (int d = 1; d < 5; d++) 
         {
-            read_block_partititon(d, 1, block, BLOCK_SIZE);
+            read_block_partition(d, 1, block, BLOCK_SIZE);
             if (hex) 
             {
                 print_bytes_hex_cols(block, BLOCK_SIZE, 12);
@@ -50,7 +50,7 @@ void cr_bitmap(unsigned disk, bool hex)
 		printf(" Bloques Libres: %d\n", MAX_BLOCKS - used_blocks);
 	} else 
     {
-        read_block_partititon(disk, 1, block, BLOCK_SIZE);
+        read_block_partition(disk, 1, block, BLOCK_SIZE);
         if (hex) 
         {
             print_bytes_hex_cols(block, BLOCK_SIZE, 12);
@@ -186,15 +186,15 @@ int cr_close(crFILE* file_desc)
 
 crFILE *cr_open(unsigned disk, char *filename, char mode)
 {
-    printf("EN FUNCION\n");
-    printf("disk: %d\n", disk);
-    printf("filename: %s\n", filename);
-    printf("mode: %c\n", mode);
-    printf("mode check: %d\n", mode == 'r');
-    printf("exists check: %d\n", cr_exists(disk, filename));
+    // printf("EN FUNCION\n");
+    // printf("disk: %d\n", disk);
+    // printf("filename: %s\n", filename);
+    // printf("mode: %c\n", mode);
+    // printf("mode check: %d\n", mode == 'r');
+    // printf("exists check: %d\n", cr_exists(disk, filename));
     if (mode == 'r' && cr_exists(disk, filename))
     {
-        printf("EN CAMINO\n");
+        // printf("EN CAMINO\n");
         char link1[] = "1/";
         char link2[] = "2/";
         char link3[] = "3/";
@@ -204,11 +204,11 @@ crFILE *cr_open(unsigned disk, char *filename, char mode)
             char linked_name[strlen(filename) - 2];
             memcpy(linked_name, filename + 2, strlen(filename) - 2);
             linked_name[strlen(filename) - 2] = '\0';
-            printf("memcmp: %d\n", memcmp(linked_name, "Baroque.mp3", strlen(linked_name)));
-            printf("pre-exists check (in 1): %d\n", cr_exists(1, "Baroque.mp3"));
-            printf("linked_name: %s\n", linked_name);
+            // printf("memcmp: %d\n", memcmp(linked_name, "Baroque.mp3", strlen(linked_name)));
+            // printf("pre-exists check (in 1): %d\n", cr_exists(1, "Baroque.mp3"));
+            // printf("linked_name: %s\n", linked_name);
             unsigned int linked_disk = filename[0] - '0';
-            printf("%d\n", linked_disk);
+            // printf("%d\n", linked_disk);
             crFILE *crfile = cr_open(linked_disk, linked_name, 'r');
             return crfile;
         }
@@ -248,7 +248,7 @@ crFILE *cr_open(unsigned disk, char *filename, char mode)
             }
             if (was_located)
             {
-                printf("LOCATED\n");
+                // printf("LOCATED\n");
                 found_entry_byte = current_byte;
                 current_byte = BLOCK_SIZE; // para terminar el while, y mantener el valor de la variable (en found_entry_byte)
             }
@@ -260,13 +260,13 @@ crFILE *cr_open(unsigned disk, char *filename, char mode)
         read_block_partition_index(disk, 0, index_block_position_buffer, found_entry_byte, 3);
         index_block_position_buffer[0] = set_bit_to_byte(index_block_position_buffer[0], 7, 0);
         index_block_position = (index_block_position_buffer[0] << 16) | (index_block_position_buffer[1] << 8) | (index_block_position_buffer[2]);
-        printf("index_block_partition: %u\n", index_block_position);
+        // printf("index_block_partition: %u\n", index_block_position);
         uint8_t references_buff[4];
         uint8_t size_buff[8];
         read_block_index(index_block_position, references_buff, 0, 4);
         read_block_index(index_block_position, size_buff, 4, 8);
         unsigned int references = (references_buff[0] << 24) | (references_buff[1] << 16) | (references_buff[2] << 8) | (references_buff[3]);
-        printf("references: %u\n", references);
+        // printf("references: %u\n", references);
         // unsigned long size = (size_buff[0] << 56) | (size_buff[1] << 48) | (size_buff[2] << 40) | (size_buff[3] << 32) | (size_buff[4] << 24) | (size_buff[5] << 16) | (size_buff[6] << 8) | (size_buff[7]);
 
         unsigned long size = 0;
@@ -286,15 +286,15 @@ crFILE *cr_open(unsigned disk, char *filename, char mode)
         size = size << 8;
         size |= size_buff[7];
 
-        printf("size: %lu\n", size);
+        // printf("size: %lu\n", size);
         // A continuacion obtener direcciones para bloques de datos
         int block_number = size / BLOCK_SIZE + (size % BLOCK_SIZE != 0);
-        printf("block_number: %u\n", block_number);
+        // printf("block_number: %u\n", block_number);
         unsigned int data_blocks[size / BLOCK_SIZE + (size % BLOCK_SIZE != 0)];
         uint8_t indirect_block_buffer[4];
         read_block_index(index_block_position, indirect_block_buffer, BLOCK_SIZE - 4, 4);
         unsigned int indirect_block = (indirect_block_buffer[0] << 24) | (indirect_block_buffer[1] << 16) | (indirect_block_buffer[2] << 8) | (indirect_block_buffer[3]);
-        printf("indirect_block: %u\n", indirect_block);
+        // printf("indirect_block: %u\n", indirect_block);
         for (int i = 0; i < block_number; i++)
         {
             uint8_t address_buffer[4];
@@ -318,13 +318,13 @@ crFILE *cr_open(unsigned disk, char *filename, char mode)
         crfile->references = references;
         crfile->size = size;
         memcpy(crfile->data_blocks, data_blocks, sizeof(unsigned int) * block_number);
-        printf("mode: %c\n", crfile->mode);
-        printf("compare mode: %d\n", crfile->mode == 'r');
-        printf("partition: %u\n", crfile->partition);
-        printf("references: %u\n", crfile->references);
-        printf("size: %lu\n", crfile->size);
-        printf("data_blocks[0]: %u\n", crfile->data_blocks[0]);
-        printf("index_block: %u\n", crfile->index_block);
+        // printf("mode: %c\n", crfile->mode);
+        // printf("compare mode: %d\n", crfile->mode == 'r');
+        // printf("partition: %u\n", crfile->partition);
+        // printf("references: %u\n", crfile->references);
+        // printf("size: %lu\n", crfile->size);
+        // printf("data_blocks[0]: %u\n", crfile->data_blocks[0]);
+        // printf("index_block: %u\n", crfile->index_block);
         return crfile;
     } else if (mode == 'w' && !cr_exists(disk, filename))
     {
@@ -370,13 +370,13 @@ crFILE *cr_open(unsigned disk, char *filename, char mode)
                 crfile->byte = 0;
                 crfile->index_block = block_direction;
                 crfile->block = data_block_direction; // ES DECIR,  EN MODO 'w', block  REPRESENTA EL PUNTERO AL BLOQUE DE DATOS EN QUE SE ESTA ESCRIBIENDO
-                printf("%c\n", crfile->mode);
-                printf("%u\n", crfile->partition);
-                printf("%u\n", crfile->references);
-                printf("%lu\n", crfile->size);
-                printf("%u\n", crfile->byte);
-                printf("%u\n", crfile->index_block);
-                printf("%u\n", crfile->block);
+                // printf("%c\n", crfile->mode);
+                // printf("%u\n", crfile->partition);
+                // printf("%u\n", crfile->references);
+                // printf("%lu\n", crfile->size);
+                // printf("%u\n", crfile->byte);
+                // printf("%u\n", crfile->index_block);
+                // printf("%u\n", crfile->block);
                 return crfile;
             }
         }
@@ -600,7 +600,7 @@ int cr_rm(unsigned disk, char* filename){
         }
         if (was_located)
         {
-            printf("LOCATED\n");
+            // printf("LOCATED\n");
             found_entry_byte = current_byte;
             current_byte = BLOCK_SIZE;
         }
@@ -651,12 +651,12 @@ int cr_rm(unsigned disk, char* filename){
         size = size << 8;
         size |= size_buff[7];
         int block_number = size / BLOCK_SIZE + (size % BLOCK_SIZE != 0);
-        printf("block_number: %u\n", block_number);
+        // printf("block_number: %u\n", block_number);
         unsigned int data_blocks[size / BLOCK_SIZE + (size % BLOCK_SIZE != 0)];
         uint8_t indirect_block_buffer[4];
         read_block_index(index_block_position, indirect_block_buffer, BLOCK_SIZE - 4, 4);
         unsigned int indirect_block = (indirect_block_buffer[0] << 24) | (indirect_block_buffer[1] << 16) | (indirect_block_buffer[2] << 8) | (indirect_block_buffer[3]);
-        printf("indirect_block: %u\n", indirect_block);
+        // printf("indirect_block: %u\n", indirect_block);
         for (int i = 0; i < block_number; i++)
         {
             uint8_t address_buffer[4];
@@ -670,7 +670,7 @@ int cr_rm(unsigned disk, char* filename){
             }
             data_blocks[i] = (address_buffer[0] << 24) | (address_buffer[1] << 16) | (address_buffer[2] << 8) | (address_buffer[3]);
         }
-        printf("defined data blocks\n");
+        // printf("defined data blocks\n");
         for (int i = 0; i < block_number; i++) {
             unsigned int address = data_blocks[i];
             // printf("address: %u\n", address);
@@ -700,7 +700,7 @@ int cr_rm(unsigned disk, char* filename){
         }
 
         write_block_partition_index(disk, 0, index_block_position_buffer, found_entry_byte, 3);
-        printf("No more references!!\n");
+        // printf("No more references!!\n");
         return 1;
     }
     write_block_index(index_block_position, references_buff, 0, 4);

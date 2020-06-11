@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 
         if (strcmp(command, "cr_open") == 0)
         {
-            crFILE *guides = cr_open(1, "hardlink2.txt", 'r');
+            crFILE *guides = cr_open(1, "guides.txt", 'r');
             
             uint8_t bytes[100];
             uint8_t bytes2[100];
@@ -62,7 +62,27 @@ int main(int argc, char *argv[])
             printf("Se leyeron %i bytes\n", bytes2_read);
             print_bytes_ascii(bytes2, 100);
             printf("%i\n",guides->references);
+            int close_result = cr_close(guides);
+            printf("close: %d\n", close_result);
+        }
+        if (strcmp(command, "cr_write") == 0)
+        {
+            crFILE *guides = cr_open(1, "guides.txt", 'r');
+            crFILE *writef = cr_open(1, "write.txt", 'w');
             
+            uint8_t bytes[100];
+            int bytes_read = cr_read(guides, bytes, 100);
+            printf("Se leyeron %i bytes\n", bytes_read);
+            print_bytes_ascii(bytes, 100);
+            printf("%i\n",guides->references);
+            printf("----------------------------------\n");
+            int bytes_write = cr_write(writef, bytes, 100);
+            printf("Se escribieron %i bytes\n", bytes_write);
+
+            int close_result1 = cr_close(guides);
+            printf("close guides: %d\n", close_result1);
+            int close_result2 = cr_close(writef);
+            printf("close writef: %d\n", close_result2);
         }
         if (strcmp(command, "cr_softlink") == 0)
         {
